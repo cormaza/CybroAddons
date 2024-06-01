@@ -178,7 +178,7 @@ class UniversityApplication(models.Model):
     @api.depends('name', 'middle_name', 'last_name')
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = f"{rec.name} {rec.middle_name} {rec.last_name}"
+            rec.display_name = f"{rec.name} {rec.middle_name or ''} {rec.last_name or ''}"
 
     def _compute_document_count(self):
         """Return the count of the documents provided"""
@@ -303,6 +303,7 @@ class UniversityApplication(models.Model):
                 'academic_year_id': rec.academic_year_id.id,
                 'company_id': rec.company_id.id,
                 'batch_id': rec.batch_id.id,
+                'student_invoice_partner_id': rec.guardian_id.id,
             }
             if not rec.is_same_address:
                 pass

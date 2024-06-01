@@ -29,18 +29,21 @@ class UniversityStudent(models.Model):
     _inherits = {'res.partner': 'partner_id'}
     _description = 'University student records'
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, values):
         """ This method overrides the create method to assign a sequence number
             to the newly created record.
            :param vals (dict): Dictionary containing the field values for the
                                 new university student record.
            :returns class: university.student The created university student
                             record."""
-        vals['admission_no'] = self.env['ir.sequence'].next_by_code(
-            'university.student')
-        res = super(UniversityStudent, self).create(vals)
-        return res
+        records = self
+        for vals in values:
+            vals['admission_no'] = self.env['ir.sequence'].next_by_code(
+                'university.student')
+            new_student = super(UniversityStudent, self).create(vals)
+            records |= new_student
+        return records
 
     partner_id = fields.Many2one(
         'res.partner', string='Partner', help="Student Partner",
@@ -123,11 +126,16 @@ class UniversityStudent(models.Model):
     academic_year_id = fields.Many2one('university.academic.year',
                                        string="Academic Year",
                                        help="Academic year of the student")
+    student_invoice_partner_id = fields.Many2one(
+        comodel_name='res.partner',
+        string='Invoice Partner',
+        required=False
+    )
 
     @api.depends('name', 'middle_name', 'last_name')
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = f"{rec.name} {rec.middle_name} {rec.last_name}"
+            rec.display_name = f"{rec.name} {rec.middle_name or ''} {rec.last_name or ''}"
 
     def action_student_documents(self):
         """ Open the documents submitted by the student along with the admission

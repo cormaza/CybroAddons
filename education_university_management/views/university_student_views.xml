@@ -145,6 +145,7 @@
                                     <field name="father_name"/>
                                     <field name="mother_name"/>
                                     <field name="guardian_id"/>
+                                    <field name="student_invoice_partner_id"/>
                                     <field name="religion"/>
                                     <field name="user_id"/>
                                 </group>

@@ -53,8 +53,6 @@ class AccountMove(models.Model):
     fee_category_id = fields.Many2one('fee.category',
                                       help="Select a fee category",
                                       string='Category')
-    partner_id = fields.Many2one(related='student_id.partner_id',
-                                 help="Set student partner in customer", )
     journal_id = fields.Many2one(related='fee_category_id.journal_id',
                                  help="Journal of the receipt")
 
@@ -75,6 +73,11 @@ class AccountMove(models.Model):
             })
         res = super(AccountMove, self).create(vals)
         return res
+
+    @api.onchange('student_id')
+    def _onchange_student_id(self):
+        for rec in self:
+            rec.partner_id = rec.student_id.student_invoice_partner_id.id or rec.student_id.partner_id.id
 
     @api.onchange('fee_structure_id')
     def _onchange_fee_structure_id(self):
