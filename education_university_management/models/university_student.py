@@ -124,6 +124,11 @@ class UniversityStudent(models.Model):
                                        string="Academic Year",
                                        help="Academic year of the student")
 
+    @api.depends('name', 'middle_name', 'last_name')
+    def _compute_display_name(self):
+        for rec in self:
+            rec.display_name = f"{rec.name} {rec.middle_name} {rec.last_name}"
+
     def action_student_documents(self):
         """ Open the documents submitted by the student along with the admission
             application. This method retrieves the documents associated with

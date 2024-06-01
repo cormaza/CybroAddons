@@ -175,6 +175,11 @@ class UniversityApplication(models.Model):
     prev_result = fields.Char('Previous Result',
                               help="Previously studied institution")
 
+    @api.depends('name', 'middle_name', 'last_name')
+    def _compute_display_name(self):
+        for rec in self:
+            rec.display_name = f"{rec.name} {rec.middle_name} {rec.last_name}"
+
     def _compute_document_count(self):
         """Return the count of the documents provided"""
         for rec in self:
