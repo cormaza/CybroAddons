@@ -197,9 +197,12 @@ class UniversityApplication(models.Model):
 
     def action_send_verification(self):
         """Button action for sending the application for the verification"""
+        required_document_type = self.env["university.document.type"].search([
+            ("required", "=", True)
+        ])
         for rec in self:
-            if not self.env['university.document'].search(
-                    [('application_ref_id', '=', rec.id)]):
+            if required_document_type and not self.env['university.document'].search(
+                    [('application_ref_id', '=', rec.id), ("document_type_id", "in", required_document_type.ids)]):
                 raise ValidationError(_('No Documents provided'))
             rec.write({
                 'state': 'verification'
@@ -216,20 +219,30 @@ class UniversityApplication(models.Model):
                 documents are provided.
         """
         for rec in self:
-            doc_status = self.env['university.document'].search(
-                [('application_ref_id', '=', rec.id)]).mapped('state')
-            if doc_status:
-                if all(state in 'done' for state in doc_status):
-                    rec.write({
-                        'verified_by_id': self.env.uid,
-                        'state': 'approve'
-                    })
+            required_document_type = self.env["university.document.type"].search([
+                ("required", "=", True)
+            ])
+            if required_document_type:
+                doc_status = self.env['university.document'].search(
+                    [('application_ref_id', '=', rec.id),
+                     ("document_type_id", "in", required_document_type.ids)]).mapped('state')
+                if doc_status:
+                    if all(state in 'done' for state in doc_status):
+                        rec.write({
+                            'verified_by_id': self.env.uid,
+                            'state': 'approve'
+                        })
+                    else:
+                        raise ValidationError(
+                            _('All Documents are not Verified Yet, '
+                              'Please complete the verification'))
                 else:
-                    raise ValidationError(
-                        _('All Documents are not Verified Yet, '
-                          'Please complete the verification'))
+                    raise ValidationError(_('No Documents provided'))
             else:
-                raise ValidationError(_('No Documents provided'))
+                rec.write({
+                    'verified_by_id': self.env.uid,
+                    'state': 'approve'
+                })
 
     def action_reject(self):
         """This method updates the state of the student application to 'reject',

@@ -31,3 +31,6 @@ class UniversityDocumentType(models.Model):
     name = fields.Char(string="Name", help="Name of the document type")
     description = fields.Char(string="Description",
                               help="Description about type")
+    required = fields.Boolean(
+        default=True
+    )
