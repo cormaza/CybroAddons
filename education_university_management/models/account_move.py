@@ -53,11 +53,9 @@ class AccountMove(models.Model):
     fee_category_id = fields.Many2one('fee.category',
                                       help="Select a fee category",
                                       string='Category')
-    journal_id = fields.Many2one(related='fee_category_id.journal_id',
-                                 help="Journal of the receipt")
 
     @api.model_create_multi
-    def create(self, vals):
+    def create(self, values):
         """ This method overrides the create method to add two fields to the
             invoice: 'is_fee' and 'student_name'.The 'is_fee' field is used to
             display fee items only in the fee tree view.
@@ -65,14 +63,16 @@ class AccountMove(models.Model):
                                 new invoice record.
             :returns class:`~account.move`: The created invoice record.
         """
-        partner = self.env['res.partner'].browse(vals[0].get('partner_id'))
-        if vals[0].get('fee_category_id'):
-            vals[0].update({
-                'is_fee': True,
-                'student_name': partner.name
-            })
-        res = super(AccountMove, self).create(vals)
-        return res
+        records = self.browse()
+        for vals in values:
+            partner = self.env['res.partner'].browse(vals.get('partner_id'))
+            if vals.get('fee_category_id'):
+                vals.update({
+                    'is_fee': True,
+                    'student_name': partner.name
+                })
+            records |= super(AccountMove, self).create(vals)
+        return records
 
     @api.onchange('student_id')
     def _onchange_student_id(self):
